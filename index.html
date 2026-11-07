@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BTC/USDT Real-Time Trade Stream</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #f3ba2f;
+            text-align: center;
+        }
+        .status {
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #333;
+        }
+        th {
+            background-color: #f3ba2f;
+            color: #121212;
+        }
+        tr:hover {
+            background-color: #2a2a2a;
+        }
+        .buy { color: #0ecb81; }
+        .sell { color: #f6465d; }
+    </style>
+</head>
+<body>
+
+    <h1>🚀 BTC/USDT Real-Time Trade Stream Dashboard</h1>
+    <div id="status" class="status" style="color: orange;">Connecting to WebSocket...</div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Trade ID</th>
+                <th>Price (USDT)</th>
+                <th>Quantity (BTC)</th>
+                <th>Quote Quantity</th>
+                <th>Side</th>
+                <th>Time</th>
+            </tr>
+        </thead>
+        <tbody id="trade-table-body">
+            <!-- Live trades will appear here -->
+        </tbody>
+    </table>
+
+    <script>
+        const statusDiv = document.getElementById("status");
+        const tableBody = document.getElementById("trade-table-body");
+        
+        // Connect to FastAPI WebSocket endpoint
+        const ws = new WebSocket("ws://localhost:8000/ws/trades");
+
+        ws.onopen = function() {
+            statusDiv.innerText = "Connected Live to Kafka Stream!";
+            statusDiv.style.color = "#0ecb81";
+        };
+
+        ws.onmessage = function(event) {
+            const trade = JSON.parse(event.data);
+            
+            // Format timestamp
+            const dateStr = new Date(Number(trade.time)).toLocaleTimeString();
+            
+            // Determine side (Buyer maker: true means seller is market maker, etc.)
+            const sideClass = trade.is_buyer_maker ? "sell" : "buy";
+            const sideText = trade.is_buyer_maker ? "Sell" : "Buy";
+
+            // Create new table row
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${trade.trade_id}</td>
+                <td style="font-weight: bold;">$${parseFloat(trade.price).toFixed(2)}</td>
+                <td>${parseFloat(trade.qty).toFixed(4)}</td>
+                <td>$${parseFloat(trade.quote_qty).toFixed(2)}</td>
+                <td class="${sideClass}" style="font-weight: bold;">${sideText}</td>
+                <td>${dateStr}</td>
+            `;
+
+            // Prepend to show newest trades at the top, limit rows to 50 for performance
+            tableBody.prepend(row);
+            if (tableBody.rows.length > 50) {
+                tableBody.deleteRow(50);
+            }
+        };
+
+        ws.onclose = function() {
+            statusDiv.innerText = "Disconnected from WebSocket.";
+            statusDiv.style.color = "#f6465d";
+        };
+    </script>
+</body>
+</html>
