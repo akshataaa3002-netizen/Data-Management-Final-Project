@@ -25,7 +25,7 @@ Data Ingestion & Processing: Python (pandas, kafka-python)
 
 Backend API: FastAPI & Uvicorn (Asynchronous WebSockets)
 
-Frontend UI: HTML5, CSS3, JavaScript (DOM stream rendering & color-coded order flows)
+Frontend UI: HTML5, CSS3
 
 📂 Repository Structure
 Plaintext
